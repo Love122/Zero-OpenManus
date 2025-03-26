@@ -1,0 +1,227 @@
+/* 
+ * visualizers.css
+ * AI思考プロセスとツール使用状況を視覚化するためのスタイル
+ */
+
+/* 共通スタイル */
+.visualizer-container {
+    margin-bottom: 15px;
+    border: 1px solid #eaedf0;
+    border-radius: 8px;
+    padding: 12px;
+    background-color: #f8f9fc;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.visualizer-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #1E293B;
+    display: flex;
+    align-items: center;
+}
+
+.visualizer-title::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.visualizer-empty {
+    color: #64748B;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* 思考プロセス視覚化 */
+.thinking-process-title::before {
+    background-color: #4C6FFF;
+}
+
+.thinking-process-step {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.thinking-process-step:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.thinking-process-step.reasoning {
+    border-left: 3px solid #4C6FFF;
+}
+
+.thinking-process-step.planning {
+    border-left: 3px solid #00C48C;
+}
+
+.thinking-process-step.execution {
+    border-left: 3px solid #FFAB2E;
+}
+
+.thinking-process-step.error {
+    border-left: 3px solid #FF3B5C;
+}
+
+.thinking-step-timestamp {
+    font-size: 0.75rem;
+    color: #94A3B8;
+    margin-bottom: 3px;
+}
+
+/* ツール使用状況視覚化 */
+.tool-usage-title::before {
+    background-color: #00C48C;
+}
+
+.tool-execution {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border-left: 3px solid #00C48C;
+    transition: all 0.2s ease;
+}
+
+.tool-execution:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tool-execution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.tool-name {
+    font-weight: 600;
+    color: #1E293B;
+    display: flex;
+    align-items: center;
+}
+
+.tool-name-icon {
+    margin-right: 6px;
+    font-size: 1.1rem;
+}
+
+.tool-timestamp {
+    font-size: 0.75rem;
+    color: #94A3B8;
+}
+
+.tool-params {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #1E293B;
+    color: #E2E8F0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 8px 0;
+    font-size: 0.9rem;
+}
+
+.tool-result {
+    background-color: #F1F5F9;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    border-left: 2px solid #00C48C;
+}
+
+.tool-error {
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    border-left: 2px solid #FF3B5C;
+}
+
+/* ツールアイコン */
+.tool-icon-github {
+    color: #333333;
+}
+
+.tool-icon-web {
+    color: #4285F4;
+}
+
+.tool-icon-file {
+    color: #34A853;
+}
+
+.tool-icon-database {
+    color: #EA4335;
+}
+
+.tool-icon-api {
+    color: #FBBC05;
+}
+
+/* アニメーション効果 */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.thinking-process-step, .tool-execution {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ダークモード対応 */
+@media (prefers-color-scheme: dark) {
+    .visualizer-container {
+        background-color: #1A202C;
+        border-color: #2D3748;
+    }
+    
+    .visualizer-title {
+        color: #E2E8F0;
+    }
+    
+    .visualizer-empty {
+        color: #A0AEC0;
+    }
+    
+    .thinking-process-step, .tool-execution {
+        background-color: #2D3748;
+    }
+    
+    .thinking-step-timestamp, .tool-timestamp {
+        color: #A0AEC0;
+    }
+    
+    .tool-name {
+        color: #E2E8F0;
+    }
+    
+    .tool-params {
+        background-color: #171923;
+        color: #E2E8F0;
+    }
+    
+    .tool-result {
+        background-color: #2D3748;
+        border-left-color: #00C48C;
+    }
+    
+    .tool-error {
+        background-color: #3B1818;
+        color: #FC8181;
+        border-left-color: #FC8181;
+    }
+}

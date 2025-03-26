@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ツール設定 - OpenManus WebUI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+        .tool-description {
+            margin-bottom: 15px;
+        }
+        .btn-verify {
+            margin-left: 10px;
+        }
+        .status-message {
+            margin-top: 10px;
+        }
+        .tool-instructions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        pre {
+            background-color: #f1f1f1;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .debug-panel {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            display: none; /* デフォルトでは非表示 */
+        }
+        .config-path-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9f5e9;
+            border-radius: 5px;
+            border-left: 4px solid #28a745;
+        }
+        .config-instruction {
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">OpenManus WebUI ツール設定</h1>
+        
+        <div id="configPathInfo" class="config-path-info d-none">
+            <h5>設定ファイルの保存先</h5>
+            <p id="configPathText">読み込み中...</p>
+            <p class="config-instruction">この情報は設定が保存されない場合のトラブルシューティングに役立ちます。</p>
+        </div>
+        
+        <ul class="nav nav-tabs" id="toolTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="true">設定</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="instructions-tab" data-bs-toggle="tab" data-bs-target="#instructions" type="button" role="tab" aria-controls="instructions" aria-selected="false">使い方</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="toolTabsContent">
+            <!-- 設定タブ -->
+            <div class="tab-pane fade show active" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>GitHub設定</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="tool-description">
+                                    GitHub APIと連携してリポジトリの検索、ファイル操作、イシュー管理などを行います。
+                                </p>
+                                
+                                <form id="githubSettingsForm">
+                                    <div class="mb-3">
+                                        <label for="github_access_token" class="form-label">アクセストークン</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="github_access_token" name="access_token" placeholder="ghp_..." required>
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleGithubToken">表示</button>
+                                        </div>
+                                        <div class="form-text">GitHubのPersonal Access Tokenを入力してください。リポジトリアクセス権限が必要です。</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="github_username" class="form-label">ユーザー名</label>
+                                        <input type="text" class="form-control" id="github_username" name="username" placeholder="GitHubのユーザー名">
+                                    </div>
+                                    
+                                    <div class="d-flex">
+                                        <button type="submit" class="btn btn-primary" id="saveGithubSettings">保存</button>
+                                        <button type="button" class="btn btn-secondary btn-verify" id="verifyGithubSettings">接続テスト</button>
+                                    </div>
+                                    
+                                    <div class="status-message mt-2" id="githubStatusMessage"></div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Web検索設定</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="tool-description">
+                                    Brave Search APIを利用してWeb検索を行います。最新の情報や事実確認に役立ちます。
+                                </p>
+                                
+                                <form id="webSearchSettingsForm">
+                                    <div class="mb-3">
+                                        <label for="web_search_api_key" class="form-label">Brave Search API Key</label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="web_search_api_key" name="api_key" placeholder="API Key">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleWebSearchKey">表示</button>
+                                        </div>
+                                        <div class="form-text">
+                                            <a href="https://brave.com/search/api/" target="_blank">Brave Search API</a>からAPIキーを取得してください。
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary" id="saveWebSearchSettings">保存</button>
+                                    <div class="status-message mt-2" id="webSearchStatusMessage"></div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <!-- デバッグパネル -->
+                        <div class="debug-panel" id="debugPanel">
+                            <h5>デバッグ情報</h5>
+                            <pre id="debugLog"></pre>
+                        </div>
+                        
+                        <!-- デバッグモード切り替えボタン -->
+                        <button class="btn btn-outline-secondary btn-sm mt-3 float-end" id="toggleDebugMode">デバッグモード</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 使い方タブ -->
+            <div class="tab-pane fade" id="instructions" role="tabpanel" aria-labelledby="instructions-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>ツール使用方法</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>OpenManus WebUIでは、プロンプト内でツールコマンドを使用できます。以下のようにして様々な外部サービスと連携できます。</p>
+                        
+                        <div class="tool-instructions" id="toolInstructions">
+                            <p>読み込み中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-outline-primary">ホームに戻る</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Web検索設定用スクリプト -->
+    <script src="/static/js/tools/web_search_settings.js"></script>
+    <script>
+        // デバッグログ関数
+        function debugLog(message, data) {
+            const debugPanel = document.getElementById('debugPanel');
+            const debugLog = document.getElementById('debugLog');
+            
+            // ログメッセージの作成
+            let logMessage = `[${new Date().toISOString()}] ${message}`;
+            if (data !== undefined) {
+                if (typeof data === 'object') {
+                    logMessage += '\n' + JSON.stringify(data, null, 2);
+                } else {
+                    logMessage += ': ' + data;
+                }
+            }
+            
+            // ログに追加
+            debugLog.textContent = logMessage + '\n\n' + debugLog.textContent;
+        }
+        
+        // 設定ファイルのパス情報を取得
+        async function fetchConfigPath() {
+            try {
+                const response = await fetch('/api/tools/config_path');
+                if (!response.ok) {
+                    throw new Error(`HTTPエラー: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data && data.config_path) {
+                    document.getElementById('configPathText').textContent = data.config_path;
+                    document.getElementById('configPathInfo').classList.remove('d-none');
+                    debugLog('設定パス情報を取得', data.config_path);
+                }
+            } catch (error) {
+                console.error('設定パス情報の取得エラー:', error);
+                debugLog('設定パス情報の取得エラー', error.message);
+            }
+        }
+        
+        // デバッグモード切り替え
+        document.getElementById('toggleDebugMode').addEventListener('click', function() {
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugPanel.style.display === 'none' || debugPanel.style.display === '') {
+                debugPanel.style.display = 'block';
+                this.textContent = 'デバッグモード (オン)';
+                debugLog('デバッグモードが有効になりました');
+                // 設定パス情報を表示
+                document.getElementById('configPathInfo').classList.remove('d-none');
+                fetchConfigPath();
+            } else {
+                debugPanel.style.display = 'none';
+                this.textContent = 'デバッグモード';
+                // 設定パス情報を非表示
+                document.getElementById('configPathInfo').classList.add('d-none');
+            }
+        });
+        
+        // APIレスポンスをより詳細に処理する関数
+        async function handleApiResponse(response, errorMessage) {
+            debugLog('APIレスポンス処理', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+            });
+            
+            // レスポンスのテキストを取得
+            const responseText = await response.text();
+            
+            try {
+                // JSONとしてパース
+                const data = JSON.parse(responseText);
+                debugLog('レスポンスJSONデータ', data);
+                return data;
+            } catch (e) {
+                // JSONパースに失敗した場合
+                debugLog('JSONパースエラー', {
+                    error: e.message,
+                    responseText: responseText.substring(0, 500) // 長すぎる場合は切り詰め
+                });
+                
+                throw new Error(`${errorMessage} - テキスト: ${responseText.substring(0, 100)}...`);
+            }
+        }
+        
+        // 設定の読み込みと保存
+        document.addEventListener('DOMContentLoaded', function() {
+            // 設定パス情報を取得
+            fetchConfigPath();
+            
+            // GitHub設定の読み込み
+            debugLog('GitHub設定の読み込みを開始');
+            fetch('/api/tools/config/github')
+                .then(response => {
+                    debugLog('GitHub設定APIレスポンス', response.status);
+                    return handleApiResponse(response, 'GitHub設定の読み込みに失敗');
+                })
+                .then(data => {
+                    debugLog('GitHub設定データを受信', data);
+                    if (data && data.config) {
+                        const accessToken = data.config.access_token || '';
+                        const username = data.config.username || '';
+                        
+                        document.getElementById('github_access_token').value = accessToken;
+                        document.getElementById('github_username').value = username;
+                        
+                        debugLog('GitHub設定を入力欄に設定', { 
+                            accessToken: accessToken ? '設定済み' : '未設定', 
+                            username: username ? username : '未設定' 
+                        });
+                    } else {
+                        debugLog('GitHub設定データがない、または不正な形式', data);
+                    }
+                })
+                .catch(error => {
+                    debugLog('GitHub設定の読み込みエラー', error.message);
+                    console.error('GitHub設定の読み込みエラー:', error);
+                });
+            
+            // Web検索設定の読み込み
+            debugLog('Web検索設定の読み込みを開始');
+            fetch('/api/tools/config/web_search')
+                .then(response => {
+                    debugLog('Web検索設定APIレスポンス', response.status);
+                    return handleApiResponse(response, 'Web検索設定の読み込みに失敗');
+                })
+                .then(data => {
+                    debugLog('Web検索設定データを受信', data);
+                    if (data && data.config) {
+                        const apiKey = data.config.api_key || '';
+                        document.getElementById('web_search_api_key').value = apiKey;
+                        debugLog('Web検索APIキーを入力欄に設定', { 
+                            apiKey: apiKey ? '設定済み' : '未設定'
+                        });
+                    } else {
+                        debugLog('Web検索設定データがない、または不正な形式', data);
+                    }
+                })
+                .catch(error => {
+                    debugLog('Web検索設定の読み込みエラー', error.message);
+                    console.error('Web検索設定の読み込みエラー:', error);
+                });
+            
+            // ツール使用方法の読み込み
+            fetch('/api/tools/instructions')
+                .then(response => handleApiResponse(response, 'ツール使用方法の読み込みに失敗'))
+                .then(data => {
+                    if (data.instructions) {
+                        const instructionsHtml = convertMarkdownToHtml(data.instructions);
+                        document.getElementById('toolInstructions').innerHTML = instructionsHtml;
+                    }
+                })
+                .catch(error => {
+                    console.error('ツール使用方法の読み込みエラー:', error);
+                    document.getElementById('toolInstructions').innerHTML = '<p>ツール使用方法の読み込みに失敗しました。</p>';
+                });
+            
+            // GitHub設定の保存
+            document.getElementById('githubSettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const accessToken = document.getElementById('github_access_token').value;
+                const username = document.getElementById('github_username').value;
+                
+                debugLog('GitHub設定の保存', { 
+                    accessToken: accessToken ? '設定あり' : '未設定', 
+                    username: username 
+                });
+                
+                const config = {
+                    access_token: accessToken,
+                    username: username
+                };
+                
+                saveConfig('github', config, 'githubStatusMessage');
+            });
+            
+            // Web検索設定の保存
+            document.getElementById('webSearchSettingsForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const apiKey = document.getElementById('web_search_api_key').value;
+                
+                debugLog('Web検索設定の保存', { 
+                    apiKey: apiKey ? '設定あり' : '未設定'
+                });
+                
+                const config = {
+                    api_key: apiKey
+                };
+                
+                saveConfig('web_search', config, 'webSearchStatusMessage');
+            });
+            
+            // GitHubアクセストークンのトグル表示/非表示
+            document.getElementById('toggleGithubToken').addEventListener('click', function() {
+                const input = document.getElementById('github_access_token');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.textContent = '隠す';
+                } else {
+                    input.type = 'password';
+                    this.textContent = '表示';
+                }
+            });
+            
+            // Web検索APIキーのトグル表示/非表示
+            document.getElementById('toggleWebSearchKey').addEventListener('click', function() {
+                const input = document.getElementById('web_search_api_key');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.textContent = '隠す';
+                } else {
+                    input.type = 'password';
+                    this.textContent = '表示';
+                }
+            });
+            
+            // GitHub設定の検証
+            document.getElementById('verifyGithubSettings').addEventListener('click', function() {
+                const statusElement = document.getElementById('githubStatusMessage');
+                statusElement.innerHTML = '<div class="alert alert-info">接続テスト中...</div>';
+                
+                debugLog('GitHub接続テスト実行');
+                
+                fetch('/api/tools/verify/github')
+                    .then(response => {
+                        debugLog('GitHub検証APIレスポンス', response.status);
+                        return handleApiResponse(response, 'GitHub検証リクエストに失敗');
+                    })
+                    .then(data => {
+                        debugLog('GitHub検証結果', data);
+                        if (data.success) {
+                            statusElement.innerHTML = `<div class="alert alert-success">${data.message}</div>`;
+                        } else {
+                            statusElement.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        debugLog('GitHub検証エラー', error.message);
+                        console.error('GitHub設定の検証エラー:', error);
+                        statusElement.innerHTML = `<div class="alert alert-danger">接続テストに失敗しました: ${error.message}</div>`;
+                    });
+            });
+        });
+        
+        // 設定の保存共通関数
+        function saveConfig(toolName, config, statusElementId) {
+            const statusElement = document.getElementById(statusElementId);
+            statusElement.innerHTML = '<div class="alert alert-info">保存中...</div>';
+            
+            debugLog(`${toolName}設定の保存リクエスト`, config);
+            
+            fetch(`/api/tools/config/${toolName}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ config: config })
+            })
+                .then(response => {
+                    debugLog(`${toolName}設定保存APIレスポンス`, response.status);
+                    return handleApiResponse(response, `${toolName}設定の保存に失敗`);
+                })
+                .then(data => {
+                    debugLog(`${toolName}設定保存結果`, data);
+                    if (data.success) {
+                        statusElement.innerHTML = '<div class="alert alert-success">設定を保存しました</div>';
+                        // 設定パス情報を更新
+                        fetchConfigPath();
+                    } else {
+                        statusElement.innerHTML = `<div class="alert alert-danger">保存エラー: ${data.detail || 'エラーが発生しました'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    debugLog(`${toolName}設定保存エラー`, error.message);
+                    console.error(`${toolName}設定の保存エラー:`, error);
+                    statusElement.innerHTML = `<div class="alert alert-danger">保存中にエラーが発生しました: ${error.message}</div>`;
+                });
+        }
+        
+        // Markdown→HTML変換の簡易実装
+        function convertMarkdownToHtml(markdown) {
+            let html = markdown;
+            
+            // コードブロック
+            html = html.replace(/```(.*?)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            
+            // インラインコード
+            html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // 見出し
+            html = html.replace(/^### (.*?)$/gm, '<h5>$1</h5>');
+            html = html.replace(/^## (.*?)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^# (.*?)$/gm, '<h3>$1</h3>');
+            
+            // リスト
+            html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*?<\/li>\n)+/g, '<ul>$&</ul>');
+            
+            // 段落
+            html = html.replace(/^(?!<[uh]|<li|<pre)(.+)$/gm, '<p>$1</p>');
+            
+            // 空行
+            html = html.replace(/\n\n/g, '<br>');
+            
+            return html;
+        }
+    </script>
+</body>
+</html>

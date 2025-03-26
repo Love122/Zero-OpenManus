@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenManus Web</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/visualizers.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/generated_files.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/chatgpt_theme.css') }}">
+    <style>
+        /* インラインスタイル調整 */
+        :root {
+            --primary-color: #4C6FFF;       /* デフォルトテーマのプライマリカラー */
+            --secondary-color: #166088;
+            --accent-color: #00D1FF;
+            --success-color: #00C48C;
+            --error-color: #FF3B5C;
+            --warning-color: #FFAB2E;
+            --info-color: #0184FF;
+            --background-color: #F8F9FB;
+            --panel-bg: #FFFFFF;
+            --text-color: #1E293B;
+            --text-secondary: #64748B;
+            --border-color: #E2E8F0;
+        }
+        
+        /* Theme Switcher */
+        .theme-switcher {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            background-color: var(--panel-bg);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .theme-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .chatgpt-theme .theme-btn.active {
+            background-color: #10a37f;
+            border-color: #10a37f;
+        }
+        
+        /* 会話メッセージのアバター */
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .user-message .message-avatar {
+            background-color: #3b82f6;
+        }
+        
+        .ai-message .message-avatar {
+            background-color: #10a37f;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        /* 思考プロセス改良 */
+        .thinking-process-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .thinking-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: rgba(16, 163, 127, 0.1);
+            color: #10a37f;
+        }
+        
+        .thinking-status.active {
+            background-color: rgba(16, 163, 127, 0.2);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="chatgpt-theme">
+    <div class="container">
+        <header>
+            <div class="nav-links">
+                <a href="/static/tool_settings.html" id="tool-settings-link" data-i18n="tool_settings">ツール設定</a>
+            </div>
+            <h1 data-i18n="app_title">OpenManus <span class="emoji">🐱</span></h1>
+            <p class="subtitle" data-i18n="app_subtitle">AI智能助手 - 网页版</p>
+            <div class="language-selector">
+                <select id="language-selector" aria-label="Language selector">
+                    <option value="zh-CN">中文</option>
+                    <option value="en-US">English</option>
+                    <option value="ja-JP">日本語</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <div class="app-container">
+                <!-- プロジェクト・セッション管理用サイドバー -->
+                <div class="sidebar">
+                    <div class="sidebar-section">
+                        <h3 data-i18n="projects">プロジェクト</h3>
+                        <div id="project-list" class="project-list">
+                            <!-- プロジェクトリストはJavaScriptで動的に生成 -->
+                        </div>
+                        <div class="sidebar-buttons">
+                            <button id="new-project-btn" class="btn-primary" data-i18n="new_project">新規</button>
+                            <button id="rename-project-btn" class="btn-edit" data-i18n="rename_project">名前変更</button>
+                            <button id="delete-project-btn" class="btn-danger" data-i18n="delete_project">削除</button>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-section">
+                        <h3 data-i18n="sessions">セッション</h3>
+                        <div id="session-list" class="session-list">
+                            <!-- セッションリストはJavaScriptで動的に生成 -->
+                        </div>
+                        <div class="sidebar-buttons">
+                            <button id="new-session-btn" class="btn-primary" data-i18n="new_session">新規</button>
+                            <button id="rename-session-btn" class="btn-edit" data-i18n="rename_session">名前変更</button>
+                            <button id="delete-session-btn" class="btn-danger" data-i18n="delete_session">削除</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- メインコンテンツエリア -->
+                <div class="main-content">
+                    <!-- プロジェクト詳細パネル -->
+                    <div id="project-details" class="project-details-panel">
+                        <div class="project-details-header">
+                            <h3 data-i18n="project_details">プロジェクト詳細</h3>
+                            <button id="save-project-btn" class="btn-primary" data-i18n="save_project">保存</button>
+                        </div>
+                        <input type="text" id="project-name" class="project-name-input" placeholder="プロジェクト名" data-i18n="project_name_placeholder">
+                        <h3 data-i18n="project_instructions">プロジェクト指示</h3>
+                        <textarea id="project-instructions" class="project-instructions-textarea" placeholder="プロジェクト指示を入力" data-i18n="project_instructions_placeholder"></textarea>
+                    </div>
+
+                    <!-- セッション情報表示エリア -->
+                    <div class="session-info">
+                        <div class="session-title-display">未選択</div>
+                    </div>
+
+                    <!-- パネルコンテナ -->
+                    <div class="panel-container">
+                        <!-- 左パネル - 思考プロセス・ファイル表示 -->
+                        <div class="panel left-panel">
+                            <h2 data-i18n="ai_operations">AI操作パネル</h2>
+
+                            <!-- AI思考プロセス表示エリア -->
+                            <div class="thinking-section">
+                                <div class="thinking-process-header">
+                                    <h3 data-i18n="ai_thinking_process">AI思考プロセス</h3>
+                                    <div class="thinking-status" id="thinking-status">準備完了</div>
+                                </div>
+
+                                <div id="thinking-process-container" class="thinking-process-container"></div>
+                                
+                                <div class="section-header">
+                                    <div class="record-count" id="record-count" data-i18n="records_count">0 条记录</div>
+                                    <div class="controls">
+                                        <label class="auto-scroll">
+                                            <input type="checkbox" id="auto-scroll" checked>
+                                            <span data-i18n="auto_scroll">自動スクロール</span>
+                                        </label>
+                                        <button id="clear-thinking" class="btn-clear" data-i18n="clear">クリア</button>
+                                    </div>
+                                </div>
+
+                                <div id="thinking-timeline" class="thinking-timeline">
+                                    <!-- 思考ステップが動的に生成される -->
+                                </div>
+                            </div>
+
+                            <!-- ツール使用状況表示エリア -->
+                            <div id="tool-usage-container" class="tool-usage-container"></div>
+                            
+                            <!-- モデル作成ファイル表示エリア - 強化版ファイルビューワーに置き換え -->
+                            <div id="generated-files-container" class="generated-files-container"></div>
+
+                            <!-- ワークスペースファイル表示 -->
+                            <div class="workspace-section">
+                                <h3 data-i18n="workspace_files">ワークスペースファイル</h3>
+                                <div class="refresh-info">
+                                    <span id="refresh-countdown" data-i18n="refresh_countdown">5秒後に更新</span>
+                                    <button id="refresh-files" class="btn-refresh" data-i18n="refresh">更新</button>
+                                </div>
+
+                                <div id="workspace-files" class="workspace-files">
+                                    <!-- ワークスペースファイルが動的に生成される -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 右パネル - チャット -->
+                        <div class="panel right-panel">
+                            <h2 data-i18n="conversation">対話</h2>
+
+                            <div id="chat-messages" class="chat-messages">
+                                <!-- チャットメッセージが動的に生成される -->
+                            </div>
+
+                            <div class="input-area">
+                                <textarea id="user-input" placeholder="メッセージを入力…" data-i18n="input_placeholder"></textarea>
+                                <div class="button-group">
+                                    <button id="send-btn" class="btn-send" data-i18n="send">送信</button>
+                                    <button id="stop-btn" class="btn-stop" disabled data-i18n="stop">停止</button>
+                                    <button id="clear-btn" class="btn-clear" data-i18n="clear">クリア</button>
+                                </div>
+                                <div id="status-indicator" class="status-indicator"></div>
+                            </div>
+
+                            <!-- ファイルビューワー -->
+                            <div id="file-viewer" class="file-viewer">
+                                <div class="file-viewer-header">
+                                    <h3 id="file-name" data-i18n="file_name">ファイル名</h3>
+                                    <button id="close-file-viewer" class="btn-close" data-i18n="close">×</button>
+                                </div>
+                                <pre id="file-content" class="file-content"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p><span data-i18n="ui_made_by">Web界面制作:</span> <a href="https://space.bilibili.com/267577" target="_blank">云栖AI</a></p>
+            <p><span data-i18n="powered_by">Powered by OpenManus -</span> <a href="https://github.com/mannaandpoem/OpenManus" target="_blank">GitHub</a></p>
+        </footer>
+    </div>
+
+    <!-- テーマ切り替えUI -->
+    <div class="theme-switcher">
+        <button class="theme-btn" data-theme="default">Default</button>
+        <button class="theme-btn active" data-theme="chatgpt">ChatGPT</button>
+    </div>
+
+    <!-- ツール実行テンプレート -->
+    <template id="tool-execution-template">
+        <div class="tool-execution-indicator">
+            <span class="indicator-icon">🔄</span>
+            <span class="indicator-text" data-i18n="tool_executing">ツールを実行中...</span>
+        </div>
+    </template>
+
+    <!-- 新しいメッセージテンプレート - アバターなど追加 -->
+    <template id="message-template">
+        <div class="message">
+            <div class="message-header">
+                <div class="message-avatar"></div>
+                <div class="message-role"></div>
+            </div>
+            <div class="message-content"></div>
+        </div>
+    </template>
+
+    <!-- 思考プロセス視覚化コンポーネント -->
+    <script src="{{ url_for('static', path='/js/thinking_process_visualizer.js') }}"></script>
+    
+    <!-- ツール使用状況視覚化コンポーネント -->
+    <script src="{{ url_for('static', path='/js/tool_usage_visualizer.js') }}"></script>
+    
+    <!-- 強化版ファイルビューワーコンポーネント -->
+    <script src="{{ url_for('static', path='/js/enhanced_files_viewer.js') }}"></script>
+    
+    <!-- 視覚化コントローラー -->
+    <script src="{{ url_for('static', path='/js/model_visualization_controller.js') }}"></script>
+
+    <!-- JavaScript モジュール -->
+    <script type="module" src="{{ url_for('static', path='/connected_interface.js') }}"></script>
+    
+    <!-- テーマ切り替えスクリプト -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            
+            // テーマ切り替え処理
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const theme = this.dataset.theme;
+                    
+                    // アクティブクラスを更新
+                    themeButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // テーマの適用
+                    if (theme === 'chatgpt') {
+                        document.body.classList.add('chatgpt-theme');
+                    } else {
+                        document.body.classList.remove('chatgpt-theme');
+                    }
+                    
+                    // ローカルストレージに保存
+                    localStorage.setItem('preferred-theme', theme);
+                });
+            });
+            
+            // 保存されているテーマがあれば読み込む
+            const savedTheme = localStorage.getItem('preferred-theme');
+            if (savedTheme) {
+                const themeBtn = document.querySelector(`.theme-btn[data-theme="${savedTheme}"]`);
+                if (themeBtn) {
+                    themeBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
